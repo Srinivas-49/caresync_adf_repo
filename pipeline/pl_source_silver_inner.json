@@ -318,7 +318,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"on": {
-						"value": "@activity('read lookup value').output.firstRow.source_system",
+						"value": "@activity('readtabledetails').output.firstRow.source_system",
 						"type": "Expression"
 					},
 					"cases": [
