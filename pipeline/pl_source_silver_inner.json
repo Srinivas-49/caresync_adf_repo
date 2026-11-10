@@ -432,7 +432,7 @@
 											"type": "DatasetReference",
 											"parameters": {
 												"folder": {
-													"value": "@activity('read lookup value').output.firstRow.source_path",
+													"value": "@activity('readtabledetails').output.firstRow.source_path",
 													"type": "Expression"
 												},
 												"container": "source"
