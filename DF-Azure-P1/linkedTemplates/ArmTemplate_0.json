@@ -75,6 +75,43 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_csv_binary')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_LS_CareSync_P1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folder": {
+						"type": "string"
+					},
+					"container": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().folder",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().container",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLS_LS_CareSync_P1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_adls_p1')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -194,43 +231,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DS_csv_binary')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ADLS_LS_CareSync_P1",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folder": {
-						"type": "string"
-					},
-					"container": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": {
-							"value": "@dataset().folder",
-							"type": "Expression"
-						},
-						"fileSystem": {
-							"value": "@dataset().container",
-							"type": "Expression"
-						}
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ADLS_LS_CareSync_P1')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/AzureSqlTable1')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -267,6 +267,221 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Pl_silver_to_gold')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "readsoucretables",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "select table_id,gold_table_name\nfrom ctrl.table_config where is_active=1 and stage='SILVER_TO_GOLD'",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "AzureSqlTable1",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ingestalltables",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "readsoucretables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('readsoucretables').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "insert in progress status",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 2,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "caresync_sql_ls_p1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "INSERT INTO ctrl.audit_log (adf_run_id,table_id,stage,status,start_time) VALUES('@{pipeline().parameters.adf_run_id}',\n@{item().table_id},'SILVER_TO_GOLD','In_Progress',getdate())",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								},
+								{
+									"name": "update failed status",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "SILVER_TO_GOLD",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "caresync_sql_ls_p1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "update ctrl.audit_log set status='failed',\nend_time=GETDATE() where adf_run_id='@{pipeline().parameters.adf_run_id}' and table_id=@{item().table_id}",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								},
+								{
+									"name": "SILVER_TO_GOLD",
+									"type": "DatabricksNotebook",
+									"dependsOn": [
+										{
+											"activity": "insert in progress status",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": {
+											"value": "/caresync_repo/caresyncadbrepo/gold/NB_@{item().gold_table_name}",
+											"type": "Expression"
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "AzureDatabricks1",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "update success status",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "SILVER_TO_GOLD",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "caresync_sql_ls_p1",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "update ctrl.audit_log set status='success',\nend_time=GETDATE() where adf_run_id='@{pipeline().parameters.adf_run_id}' and table_id=@{item().table_id}",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"adf_run_id": {
+						"type": "string",
+						"defaultValue": "a32"
+					}
+				},
+				"variables": {
+					"x": {
+						"type": "Integer"
+					},
+					"varaiablename": {
+						"type": "Integer"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AzureSqlTable1')]",
+				"[concat(variables('factoryId'), '/linkedServices/caresync_sql_ls_p1')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/pl_source_silver_inner')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -274,6 +489,7 @@
 				"activities": [
 					{
 						"name": "readtabledetails",
+						"description": "this is modified by srinu ",
 						"type": "Lookup",
 						"dependsOn": [],
 						"policy": {
@@ -834,221 +1050,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/PostgreSqlTable1')]",
 				"[concat(variables('factoryId'), '/datasets/ds_adls_p1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Pl_silver_to_gold')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "readsoucretables",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "select table_id,gold_table_name\nfrom ctrl.table_config where is_active=1 and stage='SILVER_TO_GOLD'",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "AzureSqlTable1",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "ingestalltables",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "readsoucretables",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('readsoucretables').output.value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "insert in progress status",
-									"type": "Script",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 2,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"linkedServiceName": {
-										"referenceName": "caresync_sql_ls_p1",
-										"type": "LinkedServiceReference"
-									},
-									"typeProperties": {
-										"scripts": [
-											{
-												"type": "Query",
-												"text": {
-													"value": "INSERT INTO ctrl.audit_log (adf_run_id,table_id,stage,status,start_time) VALUES('@{pipeline().parameters.adf_run_id}',\n@{item().table_id},'SILVER_TO_GOLD','In_Progress',getdate())",
-													"type": "Expression"
-												}
-											}
-										],
-										"scriptBlockExecutionTimeout": "02:00:00"
-									}
-								},
-								{
-									"name": "update failed status",
-									"type": "Script",
-									"dependsOn": [
-										{
-											"activity": "SILVER_TO_GOLD",
-											"dependencyConditions": [
-												"Failed"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"linkedServiceName": {
-										"referenceName": "caresync_sql_ls_p1",
-										"type": "LinkedServiceReference"
-									},
-									"typeProperties": {
-										"scripts": [
-											{
-												"type": "Query",
-												"text": {
-													"value": "update ctrl.audit_log set status='failed',\nend_time=GETDATE() where adf_run_id='@{pipeline().parameters.adf_run_id}' and table_id=@{item().table_id}",
-													"type": "Expression"
-												}
-											}
-										],
-										"scriptBlockExecutionTimeout": "02:00:00"
-									}
-								},
-								{
-									"name": "SILVER_TO_GOLD",
-									"type": "DatabricksNotebook",
-									"dependsOn": [
-										{
-											"activity": "insert in progress status",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"notebookPath": {
-											"value": "/caresync_repo/caresyncadbrepo/gold/NB_@{item().gold_table_name}",
-											"type": "Expression"
-										}
-									},
-									"linkedServiceName": {
-										"referenceName": "AzureDatabricks1",
-										"type": "LinkedServiceReference"
-									}
-								},
-								{
-									"name": "update success status",
-									"type": "Script",
-									"dependsOn": [
-										{
-											"activity": "SILVER_TO_GOLD",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"linkedServiceName": {
-										"referenceName": "caresync_sql_ls_p1",
-										"type": "LinkedServiceReference"
-									},
-									"typeProperties": {
-										"scripts": [
-											{
-												"type": "Query",
-												"text": {
-													"value": "update ctrl.audit_log set status='success',\nend_time=GETDATE() where adf_run_id='@{pipeline().parameters.adf_run_id}' and table_id=@{item().table_id}",
-													"type": "Expression"
-												}
-											}
-										],
-										"scriptBlockExecutionTimeout": "02:00:00"
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"adf_run_id": {
-						"type": "string",
-						"defaultValue": "a32"
-					}
-				},
-				"variables": {
-					"x": {
-						"type": "Integer"
-					},
-					"varaiablename": {
-						"type": "Integer"
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/AzureSqlTable1')]",
-				"[concat(variables('factoryId'), '/linkedServices/caresync_sql_ls_p1')]",
-				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks1')]"
 			]
 		},
 		{
