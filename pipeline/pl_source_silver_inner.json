@@ -323,7 +323,7 @@
 					},
 					"cases": [
 						{
-							"value": "neon_postgress",
+							"value": "\"neon_postgress\"",
 							"activities": [
 								{
 									"name": "soucre_to_landing_ingestion",
@@ -388,7 +388,7 @@
 							]
 						},
 						{
-							"value": "adls_csv",
+							"value": "\"adls_csv\"",
 							"activities": [
 								{
 									"name": "ingestcsvfromadls",
