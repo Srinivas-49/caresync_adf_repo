@@ -1,0 +1,19 @@
+{
+	"name": "AzureDatabricks1",
+	"properties": {
+		"annotations": [],
+		"type": "AzureDatabricks",
+		"typeProperties": {
+			"domain": "https://adb-7405609504404924.4.azuredatabricks.net",
+			"accessToken": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "keyvault_ls_p1",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "databrickskey"
+			},
+			"existingClusterId": "1110-121025-hoejayke"
+		}
+	}
+}
