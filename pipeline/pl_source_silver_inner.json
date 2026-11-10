@@ -445,7 +445,7 @@
 											"type": "DatasetReference",
 											"parameters": {
 												"folder": {
-													"value": "@concat(\n    activity('read lookup value').output.firstRow.source_sytem,\n    '/',activity('read lookup value').output.firstRow.table_name,\n    '/',variables('start_time')\n)",
+													"value": "@concat(\n    activity('readtabledetails').output.firstRow.source_system,\n    '/',\n    activity('readtabledetails').output.firstRow.source_table_name,'/',variables('start_time')\n)",
 													"type": "Expression"
 												},
 												"container": "landing"
