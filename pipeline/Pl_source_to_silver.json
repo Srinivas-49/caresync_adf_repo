@@ -48,6 +48,7 @@
 						"value": "@activity('readsoucretables').output.value",
 						"type": "Expression"
 					},
+					"isSequential": false,
 					"activities": [
 						{
 							"name": "Ingest from source to silver",
@@ -74,6 +75,10 @@
 									"table_id": {
 										"value": "@item().table_id",
 										"type": "Expression"
+									},
+									"adf_run_id": {
+										"value": "@pipeline().parameters.adf_run_id",
+										"type": "Expression"
 									}
 								}
 							}
@@ -99,7 +104,7 @@
 									{
 										"type": "Query",
 										"text": {
-											"value": "INSERT INTO ctrl.audit_log (adf_run_id,@{item().table_id},stage,status,start_time) VALUES('a1',1,'SOURCE_TO_SILVER','In_Progress',getdate())",
+											"value": "INSERT INTO ctrl.audit_log (adf_run_id,table_id,stage,status,start_time) VALUES('@{pipeline().parameters.adf_run_id}',\n@{item().table_id},'SOURCE_TO_SILVER','In_Progress',getdate())",
 											"type": "Expression"
 										}
 									}
@@ -114,7 +119,7 @@
 								{
 									"activity": "Ingest from source to silver",
 									"dependencyConditions": [
-										"Succeeded"
+										"Failed"
 									]
 								}
 							],
@@ -126,8 +131,20 @@
 								"secureInput": false
 							},
 							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "caresync_sql_ls_p1",
+								"type": "LinkedServiceReference"
+							},
 							"typeProperties": {
-								"scripts": [],
+								"scripts": [
+									{
+										"type": "Query",
+										"text": {
+											"value": "update ctrl.audit_log set status='failed',\nend_time=GETDATE() where adf_run_id='@{pipeline().parameters.adf_run_id}' and table_id=@{item().table_id}",
+											"type": "Expression"
+										}
+									}
+								],
 								"scriptBlockExecutionTimeout": "02:00:00"
 							}
 						}
@@ -139,6 +156,10 @@
 			"soucre_system": {
 				"type": "string",
 				"defaultValue": "neon_postgres"
+			},
+			"adf_run_id": {
+				"type": "string",
+				"defaultValue": "a3"
 			}
 		},
 		"variables": {
