@@ -4,6 +4,7 @@
 		"activities": [
 			{
 				"name": "readtabledetails",
+				"description": "this is modified by srinu ",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
