@@ -318,12 +318,12 @@
 				"userProperties": [],
 				"typeProperties": {
 					"on": {
-						"value": "@activity('readtabledetails').output.firstRow.source_system",
+						"value": "@trim(activity('readtabledetails').output.firstRow.source_system)",
 						"type": "Expression"
 					},
 					"cases": [
 						{
-							"value": "\"neon_postgress\"",
+							"value": "neon_postgress",
 							"activities": [
 								{
 									"name": "soucre_to_landing_ingestion",
@@ -388,7 +388,7 @@
 							]
 						},
 						{
-							"value": "\"adls_csv\"",
+							"value": "adls_csv",
 							"activities": [
 								{
 									"name": "ingestcsvfromadls",
@@ -435,7 +435,11 @@
 													"value": "@activity('readtabledetails').output.firstRow.source_path",
 													"type": "Expression"
 												},
-												"container": "source"
+												"container": "source",
+												"file_name": {
+													"value": "@concat(activity('readtabledetails').output.firstRow.source_path,'.csv')",
+													"type": "Expression"
+												}
 											}
 										}
 									],
