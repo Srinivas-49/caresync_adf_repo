@@ -191,7 +191,7 @@
 							"type": "Expression"
 						},
 						"merge_keys": {
-							"value": "@coalesce(activity('read lookup value').output.firstRow.merge_keys,'')",
+							"value": "@coalesce(activity('readtabledetails').output.firstRow.merge_keys,'')",
 							"type": "Expression"
 						}
 					}
