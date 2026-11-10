@@ -155,11 +155,11 @@
 		"parameters": {
 			"soucre_system": {
 				"type": "string",
-				"defaultValue": "neon_postgres"
+				"defaultValue": "adls_csv"
 			},
 			"adf_run_id": {
 				"type": "string",
-				"defaultValue": "a21"
+				"defaultValue": "a22"
 			}
 		},
 		"variables": {
