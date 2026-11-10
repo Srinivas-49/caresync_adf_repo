@@ -1,0 +1,36 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "DF-Azure-P1"
+		},
+		"ADLS_LS_CareSync_P1_properties_typeProperties_url": {
+			"value": "https://adlscaresyncyp1.dfs.core.windows.net/"
+		},
+		"AzureDatabricks1_properties_typeProperties_existingClusterId": {
+			"value": "1110-121025-hoejayke"
+		},
+		"caresync_sql_ls_p1_properties_typeProperties_server": {
+			"value": "caresyncserverp1.database.windows.net"
+		},
+		"caresync_sql_ls_p1_properties_typeProperties_database": {
+			"value": "sql-db-caresync"
+		},
+		"caresync_sql_ls_p1_properties_typeProperties_userName": {
+			"value": "datebeli"
+		},
+		"keyvault_ls_p1_properties_typeProperties_baseUrl": {
+			"value": "https://care-keyvaultp1.vault.azure.net/"
+		},
+		"postgres_ls_caresync_p1_properties_typeProperties_server": {
+			"value": "ep-green-dream-zazs28l8-pooler.c-2.eu-west-2.aws.neon.tech"
+		},
+		"postgres_ls_caresync_p1_properties_typeProperties_database": {
+			"value": "neondb"
+		},
+		"postgres_ls_caresync_p1_properties_typeProperties_username": {
+			"value": "neondb_owner"
+		}
+	}
+}
