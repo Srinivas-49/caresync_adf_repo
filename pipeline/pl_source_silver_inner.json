@@ -49,51 +49,6 @@
 				}
 			},
 			{
-				"name": "landing_to_bronze",
-				"type": "DatabricksNotebook",
-				"dependsOn": [
-					{
-						"activity": "change switch data",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"notebookPath": "/caresync_repo/caresyncadbrepo/landing_to_bronze",
-					"baseParameters": {
-						"landing_timestamp": {
-							"value": "@variables('start_time')",
-							"type": "Expression"
-						},
-						"source_system": {
-							"value": "@activity('readtabledetails').output.firstRow.source_system\n",
-							"type": "Expression"
-						},
-						"table_name": {
-							"value": "@activity('readtabledetails').output.firstRow.bronze_table_name",
-							"type": "Expression"
-						},
-						"source_file_format": {
-							"value": "@activity('readtabledetails').output.firstRow.source_file_format",
-							"type": "Expression"
-						}
-					}
-				},
-				"linkedServiceName": {
-					"referenceName": "AzureDatabricks1",
-					"type": "LinkedServiceReference"
-				}
-			},
-			{
 				"name": "bronze_to_silver",
 				"type": "DatabricksNotebook",
 				"dependsOn": [
@@ -456,6 +411,51 @@
 							]
 						}
 					]
+				}
+			},
+			{
+				"name": "landing_to_bronze",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "change switch data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/caresync_repo/caresyncadbrepo/landing_to_bronze",
+					"baseParameters": {
+						"landing_timestamp": {
+							"value": "@variables('start_time')",
+							"type": "Expression"
+						},
+						"source_system": {
+							"value": "@activity('readtabledetails').output.firstRow.source_system\n",
+							"type": "Expression"
+						},
+						"table_name": {
+							"value": "@activity('readtabledetails').output.firstRow.bronze_table_name",
+							"type": "Expression"
+						},
+						"source_file_format": {
+							"value": "@activity('readtabledetails').output.firstRow.source_file_format",
+							"type": "Expression"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricks1",
+					"type": "LinkedServiceReference"
 				}
 			}
 		],
