@@ -42,6 +42,14 @@
 		"postgres_ls_caresync_p1_properties_typeProperties_username": {
 			"type": "string",
 			"defaultValue": "neondb_owner"
+		},
+		"caresync_trigger_properties_Pl_source_to_silver_parameters_soucre_system": {
+			"type": "string",
+			"defaultValue": "adls_csv"
+		},
+		"caresync_trigger_properties_Pl_source_to_silver_parameters_adf_run_id": {
+			"type": "string",
+			"defaultValue": "a50"
 		}
 	},
 	"variables": {
@@ -1351,6 +1359,39 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/Pl_source_to_silver')]",
 				"[concat(variables('factoryId'), '/pipelines/Pl_silver_to_gold')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/caresync_trigger')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "Pl_source_to_silver",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"soucre_system": "[parameters('caresync_trigger_properties_Pl_source_to_silver_parameters_soucre_system')]",
+							"adf_run_id": "[parameters('caresync_trigger_properties_Pl_source_to_silver_parameters_adf_run_id')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Hour",
+						"interval": 1,
+						"startTime": "2026-11-11T10:14:00",
+						"timeZone": "Pacific Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/Pl_source_to_silver')]"
 			]
 		}
 	]

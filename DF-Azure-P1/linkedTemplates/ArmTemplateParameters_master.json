@@ -32,6 +32,12 @@
 		"postgres_ls_caresync_p1_properties_typeProperties_username": {
 			"value": "neondb_owner"
 		},
+		"caresync_trigger_properties_Pl_source_to_silver_parameters_soucre_system": {
+			"value": "adls_csv"
+		},
+		"caresync_trigger_properties_Pl_source_to_silver_parameters_adf_run_id": {
+			"value": "a50"
+		},
 		"containerUri": {
 			"value": ""
 		},

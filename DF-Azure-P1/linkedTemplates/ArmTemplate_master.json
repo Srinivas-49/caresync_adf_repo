@@ -43,6 +43,14 @@
 			"type": "string",
 			"defaultValue": "neondb_owner"
 		},
+		"caresync_trigger_properties_Pl_source_to_silver_parameters_soucre_system": {
+			"type": "string",
+			"defaultValue": "adls_csv"
+		},
+		"caresync_trigger_properties_Pl_source_to_silver_parameters_adf_run_id": {
+			"type": "string",
+			"defaultValue": "a50"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -96,6 +104,12 @@
 					},
 					"postgres_ls_caresync_p1_properties_typeProperties_username": {
 						"value": "[parameters('postgres_ls_caresync_p1_properties_typeProperties_username')]"
+					},
+					"caresync_trigger_properties_Pl_source_to_silver_parameters_soucre_system": {
+						"value": "[parameters('caresync_trigger_properties_Pl_source_to_silver_parameters_soucre_system')]"
+					},
+					"caresync_trigger_properties_Pl_source_to_silver_parameters_adf_run_id": {
+						"value": "[parameters('caresync_trigger_properties_Pl_source_to_silver_parameters_adf_run_id')]"
 					}
 				}
 			},
