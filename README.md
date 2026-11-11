@@ -1,20 +1,86 @@
-# CareSync – Azure Data Factory
+# CareSync – Azure Data Factory | Healthcare Data Engineering
 
 ## Overview
 
-This repository contains the Azure Data Factory (ADF) implementation of the CareSync data engineering project.
+CareSync is an end-to-end healthcare data engineering project built using Microsoft Azure services. This repository contains the Azure Data Factory (ADF) implementation responsible for orchestrating data ingestion, managing metadata-driven workflows, and coordinating downstream data transformations in Azure Databricks.
 
-Azure Data Factory is used as the data orchestration layer to manage and coordinate data ingestion and processing workflows. It contains the factory configuration, datasets, linked services, pipelines, and triggers required to organize the data engineering process.
+The platform integrates healthcare data from multiple sources and organizes it into a structured Medallion Architecture to support reliable data processing and analytical reporting.
 
-This repository works alongside the CareSync Azure Databricks repository, which handles notebook-based data transformations using the Medallion Architecture.
+This repository works together with the [CareSync Azure Databricks repository](https://github.com/Srinivas-49/caresyncadbrepo).
 
-## Architecture
+## Solution Architecture
 
-The ADF component is responsible for orchestrating the data pipeline workflow and coordinating the execution of data processing activities.
+```text
+Source Systems
+    |
+    |-- Neon PostgreSQL
+    |
+    |-- Azure Data Lake Storage CSV Files
+    |
+    v
+Azure Data Factory
+    |
+    |-- Metadata-driven ingestion
+    |-- Dynamic table processing
+    |-- Pipeline orchestration
+    |-- Audit and execution tracking
+    |
+    v
+Azure Data Lake Storage Gen2
+    |
+    |-- Landing Zone
+    |-- Parquet / CSV Files
+    |
+    v
+Azure Databricks
+    |
+    |-- Bronze Layer
+    |-- Silver Layer
+    |-- Gold Layer
+    |
+    v
+Healthcare Analytics
+```
 
-**Workflow:**
+## Key Features
 
-Source Data → Azure Data Factory → Azure Databricks → Data Transformation → Analytics-ready Data
+### 1. Metadata-Driven Data Ingestion
+- Uses centralized control-table configurations to manage source tables.
+- Dynamically identifies active tables for processing.
+- Supports reusable ingestion pipelines.
+- Uses parameters to manage source systems and table-level execution.
+
+### 2. Multiple Source Integrations
+- PostgreSQL data ingestion.
+- CSV file ingestion from Azure Data Lake Storage.
+- Configurable datasets and linked services.
+- Parquet-based file movement for PostgreSQL ingestion.
+
+### 3. Pipeline Orchestration
+- Master pipeline to coordinate end-to-end execution.
+- Reusable child pipelines for source-to-Silver processing.
+- Dynamic ForEach activities for multiple-table execution.
+- Databricks notebook orchestration for Silver-to-Gold transformations.
+
+### 4. Audit Logging and Monitoring
+- Tracks pipeline run IDs and table-level execution.
+- Maintains processing status in audit tables.
+- Captures in-progress, successful, and failed execution states.
+- Records processing timestamps and row counts where configured.
+
+### 5. Incremental Processing Support
+- Uses metadata configurations and watermark values.
+- Supports table-specific load strategies.
+- Coordinates downstream FULL, APPEND, and MERGE processing through Databricks.
+
+## Pipeline Components
+
+| Pipeline | Responsibility |
+|---|---|
+| PL_MASTER | Coordinates the overall workflow |
+| Pl_source_to_silver | Manages source ingestion for configured tables |
+| pl_source_silver_inner | Handles table-level ingestion and Bronze-to-Silver execution |
+| Pl_silver_to_gold | Orchestrates Gold-layer transformations |
 
 ## Repository Structure
 
@@ -22,54 +88,58 @@ Source Data → Azure Data Factory → Azure Databricks → Data Transformation 
 caresync_adf_repo/
 │
 ├── dataset/
-│   └── Dataset configurations
+│   ├── AzureSqlTable1.json
+│   ├── DS_csv_binary.json
+│   ├── PostgreSqlTable1.json
+│   └── ds_adls_p1.json
 │
 ├── factory/
-│   └── Azure Data Factory configuration
+│   └── DF-Azure-P1.json
 │
 ├── linkedService/
-│   └── Connection configurations
+│   ├── ADLS_LS_CareSync_P1.json
+│   ├── AzureDatabricks1.json
+│   ├── caresync_sql_ls_p1.json
+│   ├── keyvault_ls_p1.json
+│   └── postgres_ls_caresync_p1.json
 │
 ├── pipeline/
-│   └── Data pipeline definitions
+│   ├── PL_MASTER.json
+│   ├── Pl_source_to_silver.json
+│   ├── pl_source_silver_inner.json
+│   ├── Pl_silver_to_gold.json
+│   └── test.json
 │
 ├── trigger/
-│   └── Pipeline triggers
+│   └── caresync_trigger.json
 │
 ├── publish_config.json
-│
 └── README.md
 ```
 
 ## Technologies Used
 
 - Microsoft Azure Data Factory
-- Azure Data Factory Pipelines
-- Linked Services
-- Datasets
-- Pipeline Triggers
+- Azure Data Lake Storage Gen2
 - Azure Databricks
+- Azure SQL Database
+- PostgreSQL
+- Azure Key Vault
+- Apache Parquet
+- JSON
+- SQL
 
-## Key Responsibilities
+## Related Repository
 
-- Organizing and orchestrating data workflows.
-- Managing source and destination connections through linked services.
-- Configuring datasets for data integration.
-- Managing pipeline execution.
-- Coordinating data processing with Azure Databricks.
-- Supporting an organized and maintainable data engineering architecture.
+The transformation and analytical processing components are maintained separately:
 
-## Project Integration
+**Azure Databricks:**  
+https://github.com/Srinivas-49/caresyncadbrepo
 
-This repository is one component of the CareSync end-to-end Azure Data Engineering project.
-
-The Azure Databricks implementation is maintained separately:
-
-**Databricks Repository:** https://github.com/Srinivas-49/caresyncadbrepo
-
-Together, both repositories represent the orchestration and transformation components of the CareSync data platform.
+Together, these repositories implement the orchestration and transformation layers of the CareSync healthcare data platform.
 
 ## Author
 
-Srinivas-49
+Srinivas
 
+GitHub: https://github.com/Srinivas-49
