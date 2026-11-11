@@ -1,0 +1,12 @@
+{
+	"name": "DF-Azure-P1",
+	"properties": {
+		"globalParameters": {
+			"email_receipent": {
+				"type": "string",
+				"value": "srinivasareddymedagam1234@gmail.com"
+			}
+		}
+	},
+	"location": "uksouth"
+}
