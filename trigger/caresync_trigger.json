@@ -1,0 +1,28 @@
+{
+	"name": "caresync_trigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Pl_source_to_silver",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"soucre_system": "adls_csv",
+					"adf_run_id": "a50"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Hour",
+				"interval": 1,
+				"startTime": "2026-11-11T10:14:00",
+				"timeZone": "Pacific Standard Time"
+			}
+		}
+	}
+}
